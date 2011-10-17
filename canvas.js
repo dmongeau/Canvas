@@ -4,7 +4,7 @@ var Canvas = function(el,opts) {
 	
 	this.opts = $.extend({
 		
-		'unit' : 100
+		'unit' : 50
 		
 	},opts);
 	
@@ -24,30 +24,6 @@ var Canvas = function(el,opts) {
 };
 
 Canvas.prototype = {
-	
-	'refreshGrid' : function() {
-		
-		this.cols = Math.floor(this.width/this.opts.unit);
-		this.rows = Math.floor(this.height/this.opts.unit);
-		var grid = [];
-		for(var i = 0; i < this.rows; i++) {
-			grid[i] = [];
-			for(var ii = 0; ii < this.cols; ii++) {
-				grid[i][ii] = false;
-			}
-		}
-		
-		this.grid = grid;
-		
-	},
-	
-	'createRow' : function(row) {
-		this.grid[row] = [];
-		for(var jjj = 0; jjj < this.grid[0].length; jjj++) {
-			this.grid[row][jjj] = false;
-		}
-		this.rows = this.grid.length;
-	},
 	
 	
 	
@@ -103,6 +79,30 @@ Canvas.prototype = {
 		},300);
 	},
 	
+	'refreshGrid' : function() {
+		
+		this.cols = Math.floor(this.width/this.opts.unit);
+		this.rows = Math.floor(this.height/this.opts.unit);
+		var grid = [];
+		for(var i = 0; i < this.rows; i++) {
+			grid[i] = [];
+			for(var ii = 0; ii < this.cols; ii++) {
+				grid[i][ii] = false;
+			}
+		}
+		
+		this.grid = grid;
+		
+	},
+	
+	'createRow' : function(row) {
+		this.grid[row] = [];
+		for(var jjj = 0; jjj < this.grid[0].length; jjj++) {
+			this.grid[row][jjj] = false;
+		}
+		this.rows = this.grid.length;
+	},
+	
 	'refresh' : function() {
 		
 		this.width = this.el.width();
@@ -132,26 +132,21 @@ Canvas.prototype = {
 		;
 		var closedRows = Math.ceil(this.widgetsClosed.length/this.cols);
 		var i = 0;
-		var col = 0;
-		var lastRow = 0;
 		for(var z = 0; z < this.widgetsClosed.length; z++) {
 			
 			var $widget = this.widgetsClosed[z].el;	
 			
 			var row = lastFreeRow+Math.floor(i/this.cols);
-			if(lastRow != row) {
-				lastRow = row;
-				col = 0;
-			}
 			if(typeof(this.grid[row]) == 'undefined') {
 				this.createRow(row);
 			}
-			this.grid[row][i] = true;
 			
-			this.moveWidget($widget,(row*this.opts.unit)+'px',(col*this.opts.unit)+'px');
+			var cols = Math.ceil($widget.width()/this.opts.unit);
+			var rows = Math.ceil($widget.height()/this.opts.unit);
+			var pos = this.getRowFreePosition(row,rows,cols);
 			
-			i++;
-			col++;
+			this.fillGrid(pos,rows,cols);
+			this.moveWidget($widget, pos.top.px, pos.left.px);
 			
 		}
 		
