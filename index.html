@@ -1,0 +1,203 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Untitled Document</title>
+<script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.6.4/jquery.min.js"></script>
+<script type="text/javascript" src="canvas.js"></script>
+<style type="text/css">
+	#canvas {
+		position:absolute;
+		display:block;
+		top:5%;
+		left:1%;
+		width:90%;
+		height:90%;
+		background:#eee;	
+	}
+	
+	#canvas .absolute {
+		position:absolute;
+	}
+	
+	.widget {
+		display:block;
+		width:200px;
+		height:200px;	
+	}
+	
+	.widget .inner {
+		width:195px;
+		height:195px;
+		margin:5px 0 0 5px;	
+		background:#666;
+		display:block;
+	}
+	
+	.small {
+		width:100px;
+		height:100px;	
+	}
+	
+	.small .inner {
+		width:95px;
+		height:95px;
+	}
+	
+	.big {
+		width:300px;
+		height:300px;	
+	}
+	
+	.big .inner {
+		width:295px;
+		height:295px;
+	}
+	
+	.rect {
+		width:200px;
+		height:300px;	
+	}
+	
+	.rect .inner {
+		width:195px;
+		height:295px;
+	}
+	
+</style>
+</head>
+
+<body>
+
+<div id="canvas"></div>
+
+<div id="widget">
+	<div class="inner">
+        <a href="" class="plus">+</a> 
+        <a href="" class="minus">-</a> 
+        <a href="" class="close">x</a>
+    </div>
+</div>
+
+<script type="text/javascript">
+var canvas = null;
+
+$(function() {
+	
+	var $widget = $('#widget').clone().removeAttr('id').addClass('widget');
+	$('#widget').remove();
+	
+	$('.widget a.plus').live('click',function(e) {
+		e.preventDefault();
+		
+		if($(this).parents('.widget').is('.small')) {
+			$(this).parents('.widget').removeClass('small');
+			
+			var name = $(this).parents('.widget').attr('rel');
+			
+			canvas.widgets[name].closed = false;
+			
+			var widgetsClosed = [];
+			for(var i = 0; i < canvas.widgetsClosed.length; i++) {
+				if(canvas.widgetsClosed[i].name != name) widgetsClosed.push(canvas.widgetsClosed[i]);
+			}
+			canvas.widgetsClosed = widgetsClosed;
+			
+			canvas.widgetsOpened.push(canvas.widgets[name]);
+			
+		} else if(!$(this).parents('.widget').is('.big')) {
+			$(this).parents('.widget').addClass('big');
+		}
+		
+		canvas.refresh();
+		
+	});
+	$('.widget a.minus').live('click',function(e) {
+		e.preventDefault();
+		
+		if($(this).parents('.widget').is('.big')) {
+			$(this).parents('.widget').removeClass('big');
+		}
+		
+		canvas.refresh();
+		
+	});
+	$('.widget a.close').live('click',function(e) {
+		e.preventDefault();
+		$(this).parents('.widget').removeClass('big').removeClass('rect');
+		$(this).parents('.widget').addClass('small');
+		
+		var name = $(this).parents('.widget').attr('rel');
+		canvas.widgets[name].closed = true;
+		
+		var widgetsOpened = [];
+		for(var i = 0; i < canvas.widgetsOpened.length; i++) {
+				console.log('ab ',canvas.widgetsOpened[i].name);
+			if(canvas.widgetsOpened[i].name != name) {
+				console.log('a');
+				widgetsOpened.push(canvas.widgetsOpened[i]);
+			}
+		}
+		canvas.widgetsOpened = widgetsOpened;
+		
+		canvas.widgetsClosed.push(canvas.widgets[name]);
+		
+		canvas.refresh();
+	});
+	
+	canvas = new Canvas('#canvas');
+	
+	
+	var widgets = [
+	
+		'big','big','','','small','','small','small','','','small','small','','',''
+	
+	];
+	
+	//var classes = ['big','','small','rect']
+	var bigCount = 0;
+	var bigSize = 300*300;
+	var bigMax = Math.floor((canvas.width*canvas.height)/bigSize/6);
+	if(!bigMax) bigMax = 1;
+	console.log('bigMax : ',bigMax);
+	for(var i = 0; i < widgets.length; i++) {
+		//var index = Math.floor(Math.random()*(classes.length+1));
+		var name = 'W'+(i < 10 ? ('0'+i):i);
+		var $w = $widget.clone().attr('rel',name);
+		if(widgets[i].length) {
+			if(widgets[i] == 'big') {
+				if(bigCount < bigMax) {
+					console.log('big count:',bigCount,' max:',bigMax);
+					$w.addClass(widgets[i]);
+					bigCount++;
+				}
+			} else {
+				$w.addClass(widgets[i]);
+			}
+			
+		}
+		canvas.addWidget(name,$w);
+		
+	}
+	
+	canvas.refresh();
+	
+	var resizeTimeout = null;
+	$(window).resize(function() {
+		if(resizeTimeout) {
+			window.clearTimeout(resizeTimeout);
+			resizeTimeout = null;
+		}
+		resizeTimeout = window.setTimeout(function() {
+			canvas.refresh();
+			resizeTimeout = null;
+		},500);
+	});
+	
+	
+});
+
+</script>
+
+</body>
+</html>
