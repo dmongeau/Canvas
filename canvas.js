@@ -4,7 +4,7 @@ var Canvas = function(el,opts) {
 	
 	this.opts = $.extend({
 		
-		'unit' : 50
+		'unit' : 100
 		
 	},opts);
 	
@@ -79,6 +79,48 @@ Canvas.prototype = {
 		},300);
 	},
 	
+	'makeDraggable' : function($widget) {
+		
+		var self = this;
+		
+		$widget.draggable({
+			grid: [50, 50],
+			opacity: 0.8,
+			revert: 'invalid',
+			snap: true,
+			zIndex: 2000,
+			containment: self.el
+		});
+		$widget.droppable({
+			tolerance: 'pointer',
+			drop: function(e,ui) {
+				var destination = $(this).attr('rel');
+				var origin = $(ui.draggable).attr('rel');
+				
+				var originIndex = -1;
+				var destinationIndex = -1;
+				for(var i = 0; i < self.widgetsOpened.length; i++) {
+					if(self.widgetsOpened[i].name == destination) {
+						destinationIndex = i;
+					}
+					if(self.widgetsOpened[i].name == origin) {
+						originIndex = i;
+					}
+				}
+				var dest = self.widgetsOpened[destinationIndex];
+				self.widgetsOpened.splice(destinationIndex,1,self.widgetsOpened[originIndex]);
+				self.widgetsOpened.splice(originIndex,1,dest);
+				
+				self.refresh();
+			}
+		});
+	},
+	
+	'notDraggable' : function($widget) {
+		$widget.draggable('destroy');
+		$widget.droppable('destroy');
+	},
+	
 	'refreshGrid' : function() {
 		
 		this.cols = Math.floor(this.width/this.opts.unit);
@@ -123,18 +165,20 @@ Canvas.prototype = {
 				console.log(this.grid);
 				
 				this.moveWidget($widget, pos.top.px, pos.left.px);
+				this.makeDraggable($widget);
 				
 		}
 		
 		
 		var lastFreeRow = this.getLastFreeRow();
 		console.log('lastFreeRow : ',lastFreeRow);
-		;
+		
 		var closedRows = Math.ceil(this.widgetsClosed.length/this.cols);
 		var i = 0;
 		for(var z = 0; z < this.widgetsClosed.length; z++) {
 			
 			var $widget = this.widgetsClosed[z].el;	
+			this.notDraggable($widget);
 			
 			var row = lastFreeRow+Math.floor(i/this.cols);
 			if(typeof(this.grid[row]) == 'undefined') {
