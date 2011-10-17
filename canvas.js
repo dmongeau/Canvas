@@ -4,6 +4,9 @@ var Canvas = function(el,opts) {
 	
 	this.opts = $.extend({
 		
+		'draggable' : true,
+		'widgetClass' : 'widget',
+		'hoverClass' : 'over',
 		'unit' : 100
 		
 	},opts);
@@ -31,12 +34,12 @@ Canvas.prototype = {
 		
 		this.widgets[name] = {
 			'name' : name,
-			'el' : $(widget),
+			'el' : $(widget).addClass(this.opts.widgetClass),
 			'closed' : $(widget).is('.small')
 		};
 		this.widgetsCount++;
 		
-		this.el.append(widget);
+		this.el.append(this.widgets[name].el);
 		
 		if(this.widgets[name].closed) {
 			this.widgetsClosed.push(this.widgets[name]);
@@ -81,17 +84,21 @@ Canvas.prototype = {
 	
 	'makeDraggable' : function($widget) {
 		
-		var self = this;
-		
 		$widget.draggable({
 			grid: [50, 50],
 			opacity: 0.8,
 			revert: 'invalid',
 			snap: true,
 			zIndex: 2000,
-			containment: self.el
+			containment: this.el
 		});
+		
+		var self = this;
 		$widget.droppable({
+			accept: '.widget',
+			greedy: true,
+			addClasses: false,
+			hoverClass: this.opts.hoverClass,
 			tolerance: 'pointer',
 			drop: function(e,ui) {
 				var destination = $(this).attr('rel');
@@ -165,7 +172,7 @@ Canvas.prototype = {
 				console.log(this.grid);
 				
 				this.moveWidget($widget, pos.top.px, pos.left.px);
-				this.makeDraggable($widget);
+				if(this.opts.draggable) this.makeDraggable($widget);
 				
 		}
 		
@@ -175,14 +182,19 @@ Canvas.prototype = {
 		
 		var closedRows = Math.ceil(this.widgetsClosed.length/this.cols);
 		var i = 0;
+		var nextRow = 0;
 		for(var z = 0; z < this.widgetsClosed.length; z++) {
 			
 			var $widget = this.widgetsClosed[z].el;	
-			this.notDraggable($widget);
+			if(this.opts.draggable) this.notDraggable($widget);
 			
-			var row = lastFreeRow+Math.floor(i/this.cols);
-			if(typeof(this.grid[row]) == 'undefined') {
-				this.createRow(row);
+			var row = (lastFreeRow > 0 ? (lastFreeRow-1):0)+nextRow;
+			if(typeof(this.grid[row]) == 'undefined') this.createRow(row);
+			var freeCount = this.getRowFreeColCount(row);
+			if(freeCount == 0) {
+				row++;
+				nextRow++;
+				if(typeof(this.grid[row]) == 'undefined') this.createRow(row);
 			}
 			
 			var cols = Math.ceil($widget.width()/this.opts.unit);
@@ -194,8 +206,8 @@ Canvas.prototype = {
 			
 		}
 		
-		console.log('closedWidgets');
-		console.log(this.widgetsClosed);
+		//console.log('closedWidgets');
+		//console.log(this.widgetsClosed);
 		
 		this.adjustHeight();
 		

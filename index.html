@@ -35,6 +35,10 @@
 		display:block;
 	}
 	
+	.over .inner {
+		background:#ff9;
+	}
+	
 	.small {
 		width:100px;
 		height:100px;	
@@ -85,7 +89,7 @@ var canvas = null;
 
 $(function() {
 	
-	var $widget = $('#widget').clone().removeAttr('id').addClass('widget');
+	var $widget = $('#widget').clone().removeAttr('id');
 	$('#widget').remove();
 	
 	$('.widget a.plus').live('click',function(e) {
